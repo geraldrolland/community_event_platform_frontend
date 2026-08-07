@@ -121,6 +121,7 @@ export const VENUE_STATUSES = [
   "reserved",
   "booked",
   "under_maintenance",
+  "closed",
 ] as const;
 
 export const EVENT_STATUSES = ["pending", "approved", "rejected"] as const;

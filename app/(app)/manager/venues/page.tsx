@@ -3,12 +3,14 @@
 import { Building2, Pencil, Plus, Trash2, Users } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Badge,
   Button,
   EmptyState,
   FormError,
+  Input,
+  Modal,
   Skeleton,
 } from "@/components/ui";
 import { RequireRole } from "@/components/guards";
@@ -20,6 +22,8 @@ function ManagerVenuesContent() {
   const [venues, setVenues] = useState<Venue[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Venue | null>(null);
+  const [confirmText, setConfirmText] = useState("");
 
   useEffect(() => {
     api.venue
@@ -30,14 +34,18 @@ function ManagerVenuesContent() {
       );
   }, []);
 
-  const handleDelete = async (venue: Venue) => {
-    if (!confirm(`Delete "${venue.name}"? This also removes its events and votes.`))
-      return;
+  const closeDeleteModal = useCallback(() => {
+    setDeleteTarget(null);
+    setConfirmText("");
+  }, []);
+
+  const performDelete = async (venue: Venue) => {
     setDeleting(venue.id);
     setError(null);
     try {
       await api.venue.remove(venue.id);
       setVenues((prev) => (prev ? prev.filter((v) => v.id !== venue.id) : prev));
+      closeDeleteModal();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not delete venue.");
     } finally {
@@ -135,20 +143,67 @@ function ManagerVenuesContent() {
                       <Pencil className="size-3.5" /> Edit
                     </Button>
                   </Link>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    loading={deleting === venue.id}
-                    onClick={() => handleDelete(venue)}
-                  >
-                    <Trash2 className="size-3.5" /> Delete
-                  </Button>
+                  {venue.status === "closed" && (
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => {
+                        setConfirmText("");
+                        setDeleteTarget(venue);
+                      }}
+                    >
+                      <Trash2 className="size-3.5" /> Delete
+                    </Button>
+                  )}
                 </div>
               </div>
             </motion.div>
           ))}
         </div>
       )}
+
+      <Modal
+        open={deleteTarget !== null}
+        onClose={closeDeleteModal}
+        title="Delete venue"
+        footer={
+          <>
+            <Button variant="outline" onClick={closeDeleteModal}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              loading={deleting === deleteTarget?.id}
+              disabled={
+                !deleteTarget || confirmText.trim() !== deleteTarget.name
+              }
+              onClick={() => deleteTarget && performDelete(deleteTarget)}
+            >
+              <Trash2 className="size-4" /> Proceed
+            </Button>
+          </>
+        }
+      >
+        {deleteTarget && (
+          <>
+            <p>
+              Deleting{" "}
+              <span className="font-semibold text-slate-900 dark:text-white">
+                {deleteTarget.name}
+              </span>{" "}
+              also removes its events and votes. Type the venue name to
+              confirm.
+            </p>
+            <Input
+              autoFocus
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder={deleteTarget.name}
+              className="mt-4"
+            />
+          </>
+        )}
+      </Modal>
     </div>
   );
 }

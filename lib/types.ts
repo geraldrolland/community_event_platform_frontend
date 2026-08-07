@@ -58,7 +58,7 @@ export interface OperatingHours {
   closing_time: string;
 }
 
-export type VenueStatus = "available" | "reserved" | "booked" | "under_maintenance";
+export type VenueStatus = "available" | "reserved" | "booked" | "under_maintenance" | "closed";
 export type EventStatus = "pending" | "approved" | "rejected";
 export type VoteStatus = "ballot_open" | "ballot_close";
 

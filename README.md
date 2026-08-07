@@ -65,23 +65,90 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Docker
 
-The multi-stage `Dockerfile` builds with `npm ci`, produces a standalone Next.js output, and runs as a non-root `nextjs` user with a healthcheck.
+The multi-stage `Dockerfile` builds with `npm ci`, produces a standalone Next.js output, and runs as a non-root `nextjs` user with a healthcheck. The runtime image contains only the compiled server, static assets, and `public/` files — no build tools or source code.
+
+### How the Dockerfile works
+
+| Stage | Base image | What it does |
+| --- | --- | --- |
+| `base` | `node:22-alpine` | Shared base image |
+| `deps` | — | Installs `libc6-compat`, runs `npm ci` from the lockfile |
+| `builder` | — | Copies node_modules and source, bakes in `NEXT_PUBLIC_API_URL`, runs `npm run build` |
+| `runner` | — | Creates the non-root `nextjs` user (UID 1001), copies `.next/standalone`, `.next/static`, and `public`, serves on port 3000 |
+
+### 1. Build the image
 
 ```bash
-# Build
 docker build -t happenhub-frontend .
-
-# Run
-docker run -d --name happenhub-frontend -p 3000:3000 happenhub-frontend
 ```
 
-`NEXT_PUBLIC_*` variables are inlined into the client bundle at build time, so pass them as build args when the API is not on localhost:
+`NEXT_PUBLIC_*` variables are inlined into the client bundle **at build time**, not read at runtime. The default is `NEXT_PUBLIC_API_URL=http://localhost:8000`. If the backend API is not on localhost, pass it as a build arg:
 
 ```bash
 docker build \
   --build-arg NEXT_PUBLIC_API_URL=https://api.example.com \
   -t happenhub-frontend .
 ```
+
+> **Important:** after changing `NEXT_PUBLIC_API_URL` you must rebuild the image — `docker run` will not pick up the new value.
+
+### 2. Run the container
+
+```bash
+docker run -d \
+  --name happenhub-frontend \
+  -p 3000:3000 \
+  --restart unless-stopped \
+  happenhub-frontend
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+Useful flags:
+- `--name happenhub-frontend` — gives the container a fixed name so you can `docker stop/start/logs` it by name
+- `-p 3000:3000` — publishes port 3000; change the left side to serve on a different host port (e.g. `-p 8080:3000`)
+- `--restart unless-stopped` — auto-restarts the container on boot or crash
+
+### 3. Verify the container is healthy
+
+```bash
+docker ps            # STATUS column shows "Up" and "healthy" after ~10s
+docker logs happenhub-frontend
+```
+
+The image has a healthcheck that requests `/` every 30 seconds, so orchestrators (Docker Compose, Kubernetes, etc.) can detect and restart unhealthy instances.
+
+### 4. Stop and remove the container
+
+```bash
+docker stop happenhub-frontend
+docker rm happenhub-frontend
+```
+
+### Common commands
+
+| Command | Description |
+| --- | --- |
+| `docker build -t happenhub-frontend .` | Build the image |
+| `docker run -d --name happenhub-frontend -p 3000:3000 happenhub-frontend` | Run a detached container |
+| `docker logs -f happenhub-frontend` | Follow container logs |
+| `docker ps` | List running containers and health status |
+| `docker exec -it happenhub-frontend sh` | Open a shell inside the container |
+| `docker stop happenhub-frontend && docker rm happenhub-frontend` | Stop and remove the container |
+| `docker image prune -f` | Remove dangling images |
+
+### Connecting to a backend running on the host
+
+All API calls happen in the browser, so the value baked into the image must be reachable from the client machine, not from inside the container:
+
+```bash
+docker build \
+  --build-arg NEXT_PUBLIC_API_URL=http://localhost:8000 \
+  -t happenhub-frontend .
+docker run -d --name happenhub-frontend -p 3000:3000 happenhub-frontend
+```
+
+This works because the browser reaches `localhost:8000` directly; if you use `--network host` or Docker Compose networking instead, point the build arg at the backend's reachable address (e.g. `http://backend:8000` in a compose network).
 
 ## Project Structure
 

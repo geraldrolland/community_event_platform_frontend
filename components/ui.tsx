@@ -3,6 +3,7 @@
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import {
   forwardRef,
+  useEffect,
   useState,
   type ButtonHTMLAttributes,
   type InputHTMLAttributes,
@@ -171,6 +172,7 @@ const badgeVariants: Record<string, string> = {
   booked: "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300",
   under_maintenance:
     "bg-slate-200 text-slate-600 dark:bg-slate-600/40 dark:text-slate-300",
+  closed: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300",
   pending: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
   approved: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
   rejected: "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300",
@@ -271,6 +273,50 @@ export function Field({
     <div>
       <Label hint={hint}>{label}</Label>
       {children}
+    </div>
+  );
+}
+
+export function Modal({
+  open,
+  onClose,
+  title,
+  children,
+  footer,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: ReactNode;
+  footer?: ReactNode;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl outline-none dark:border-slate-700 dark:bg-slate-800"
+      >
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white">{title}</h2>
+        <div className="mt-3 text-sm text-slate-500 dark:text-slate-400">{children}</div>
+        {footer && <div className="mt-6 flex justify-end gap-2">{footer}</div>}
+      </div>
     </div>
   );
 }
