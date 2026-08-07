@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, MailCheck, Users } from "lucide-react";
+import { Building2, CheckCircle2, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
@@ -27,26 +27,17 @@ export function LoginForm({ role }: { role: Role }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [pendingVerify, setPendingVerify] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
-    setPendingVerify(false);
     setSubmitting(true);
     try {
       await login(role, { email, password });
       router.replace(ROLE_HOME[role]);
     } catch (err) {
-      const message =
-        err instanceof ApiError && err.status === 403
-          ? "Your email isn't verified yet. We've re-sent the verification link."
-          : err instanceof ApiError
-            ? err.message
-            : "Something went wrong. Please try again.";
-      setError(message);
-      if (err instanceof ApiError && err.status === 403) setPendingVerify(true);
+      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -74,16 +65,6 @@ export function LoginForm({ role }: { role: Role }) {
         />
       </Field>
 
-      {pendingVerify && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-          <p className="flex items-center gap-2 font-semibold">
-            <MailCheck className="size-4" /> Check your inbox
-          </p>
-          <p className="mt-1">
-            Open the verification link we emailed you, then log in again.
-          </p>
-        </div>
-      )}
       <FormError message={error} />
 
       <Button type="submit" loading={submitting} className="w-full" size="lg">
@@ -139,17 +120,14 @@ export function RegisterForm({ role }: { role: Role }) {
     return (
       <div className="text-center">
         <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
-          <MailCheck className="size-7" />
+          <CheckCircle2 className="size-7" />
         </span>
         <h2 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">
-          Check your email
+          Account created
         </h2>
         <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500 dark:text-slate-400">
-          We sent a verification link to{" "}
-          <span className="font-semibold text-slate-700 dark:text-slate-200">
-            {form.email}
-          </span>
-          . Click it to activate your {roleMeta[role].label} account, then log in.
+          Your {roleMeta[role].label} account is ready. You can log in
+          right away.
         </p>
         <Link
           href={role === "customer" ? "/login" : "/login/venue-manager"}

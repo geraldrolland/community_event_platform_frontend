@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, MailCheck, ShieldCheck } from "lucide-react";
+import { LogOut, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -85,16 +85,6 @@ function ProfileContent() {
             </div>
             <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
               {user.email} · joined {formatDate(user.created_at)}
-            </p>
-            <p
-              className={`mt-1 flex items-center gap-1.5 text-xs font-medium ${
-                user.is_email_verified
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-amber-600 dark:text-amber-400"
-              }`}
-            >
-              <MailCheck className="size-3.5" />
-              {user.is_email_verified ? "Email verified" : "Email not verified"}
             </p>
           </div>
         </div>

@@ -167,12 +167,6 @@ export function Navbar({ variant = "public" }: { variant?: "public" | "app" }) {
           </nav>
         </div>
       )}
-
-      {user && !user.is_email_verified && (
-        <div className="bg-amber-100 py-1.5 text-center text-xs font-medium text-amber-800 dark:bg-amber-500/15 dark:text-amber-300">
-          Your email isn&apos;t verified yet — check your inbox for the verification link.
-        </div>
-      )}
     </header>
   );
 }

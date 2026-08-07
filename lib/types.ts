@@ -6,7 +6,6 @@ export interface UserBase {
   middle_name: string | null;
   last_name: string;
   email: string;
-  is_email_verified: boolean;
   role: Role;
   created_at: string;
   updated_at: string;

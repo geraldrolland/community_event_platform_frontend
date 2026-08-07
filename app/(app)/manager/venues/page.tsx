@@ -3,7 +3,7 @@
 import { Building2, Pencil, Plus, Trash2, Users } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Badge,
   Button,
@@ -24,6 +24,11 @@ function ManagerVenuesContent() {
   const [deleting, setDeleting] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Venue | null>(null);
   const [confirmText, setConfirmText] = useState("");
+  const confirmInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (deleteTarget) confirmInputRef.current?.focus();
+  }, [deleteTarget]);
 
   useEffect(() => {
     api.venue
@@ -195,7 +200,7 @@ function ManagerVenuesContent() {
               confirm.
             </p>
             <Input
-              autoFocus
+              ref={confirmInputRef}
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
               placeholder={deleteTarget.name}

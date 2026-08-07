@@ -127,8 +127,6 @@ export const api = {
         method: "POST",
         body: payload,
       }),
-    verifyEmail: (token: string) =>
-      request<{ message: string }>(`/api/auth/verify-email?token=${encodeURIComponent(token)}`),
     updateMe: (payload: UpdateProfilePayload) =>
       request<UserBase>("/api/auth/me/update", { method: "PATCH", body: payload }),
     logout: () => request<undefined>("/api/auth/logout", { method: "POST" }),

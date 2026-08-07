@@ -4,7 +4,7 @@ Web client for HappenHub — a community event platform where venue managers lis
 
 ## Features
 
-- **Role-based accounts** — customer and venue-manager registration with email verification and distinct workspaces
+- **Role-based accounts** — customer and venue-manager registration and distinct workspaces
 - **Venue management** — managers can create, edit, and delete venues, upload images, and set capacity
 - **Event requests** — customers propose events at venues; managers approve or reject them
 - **Voting** — customers vote on pending event requests
@@ -161,7 +161,6 @@ app/                 # App Router pages and layouts
   events/            #   event browsing and creation
   votes/             #   voting pages
   profile/           #   user profile
-  verify-email/      #   email-verification landing
 components/          # Shared components (auth forms, guards, navbar, forms, UI kit)
 lib/                 # API client (typed endpoints, session-error handling), constants, types
 ```
