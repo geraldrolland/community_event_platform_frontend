@@ -1,6 +1,7 @@
 "use client";
 
-import { CheckCircle2, Clock3, FilePen, Trash2 } from "lucide-react";import { useEffect, useMemo, useState } from "react";
+import { CheckCircle2, Clock3, FilePen, Trash2 } from "lucide-react";import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { EventCard } from "@/components/event-card";
 import { Button, EmptyState, FormError, Spinner } from "@/components/ui";
 import { RequireRole } from "@/components/guards";
@@ -16,7 +17,11 @@ const tabs: { key: Tab; label: string }[] = [
 ];
 
 function EventsContent() {
-  const [tab, setTab] = useState<Tab>("upcoming");
+  const searchParams = useSearchParams();
+  const [tab, setTab] = useState<Tab>(() => {
+    const t = searchParams.get("tab");
+    return t === "ballot" || t === "mine" ? t : "upcoming";
+  });
   const [upcoming, setUpcoming] = useState<Event[] | null>(null);
   const [pending, setPending] = useState<Event[] | null>(null);
   const [mine, setMine] = useState<Event[] | null>(null);
@@ -200,7 +205,9 @@ function EventsContent() {
 export default function EventsPage() {
   return (
     <RequireRole role="customer">
-      <EventsContent />
+      <Suspense fallback={null}>
+        <EventsContent />
+      </Suspense>
     </RequireRole>
   );
 }

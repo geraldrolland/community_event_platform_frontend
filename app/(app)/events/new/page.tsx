@@ -1,14 +1,13 @@
 "use client";
 
 import { CalendarPlus } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   Button,
   Card,
   Field,
   FormError,
-  FormSuccess,
   Input,
   Select,
   Textarea,
@@ -20,6 +19,7 @@ import type { Venue } from "@/lib/types";
 function NewEventForm() {
   const searchParams = useSearchParams();
   const presetVenue = searchParams.get("venue");
+  const router = useRouter();
 
   const [venues, setVenues] = useState<Venue[] | null>(null);
   const [form, setForm] = useState({
@@ -29,7 +29,6 @@ function NewEventForm() {
     target_venue_id: presetVenue ?? "",
   });
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -47,7 +46,6 @@ function NewEventForm() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
-    setSuccess(null);
     setSubmitting(true);
     try {
       await api.event.create({
@@ -56,8 +54,7 @@ function NewEventForm() {
         proposed_date: new Date(form.proposed_date).toISOString(),
         target_venue_id: Number(form.target_venue_id),
       });
-      setSuccess("Event proposed! It's now on the open ballot — rally those votes.");
-      setForm({ title: "", description: "", proposed_date: "", target_venue_id: "" });
+      router.replace("/events?tab=mine");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not propose event.");
     } finally {
@@ -131,7 +128,6 @@ function NewEventForm() {
           </Field>
 
           <FormError message={error} />
-          <FormSuccess message={success} />
 
           <Button
             type="submit"
